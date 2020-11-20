@@ -1,53 +1,58 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import Navbar from './components/layout/Navbar';
 import Users from './components/users/Users';
 import Search from './components/users/Search';
+import Alert from './components/layout/Alert';
 import axios from 'axios';
 import './App.css';
 
 
-class App extends Component {
-  state = {
-    users: [],
-    loading: false
-  }
+const App = () => {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [user, setAlert] = useState(null);
   
-  async componentDidMount() {
-    this.setState({ loading: true });
-    const res = await axios.get(`https://api.github.com/users?client_id=${process.env.REACT_APP_GITHUB_CLIENT_ID}&client_secret=${process.env.REACT_APP_GITHUB_CLIENT_SECRET}`);
-    this.setState({ users: res.data, loading: false });
-  }
 
-  // Search Github Users. Props passed from Search.js
-  searchUsers = async text => {
-    this.setState({ loading: true });
+  // Search Github Users
+  const searchUsers = async text => {
+    setLoading(true);
     const res = await axios.get(`https://api.github.com/search/users?q=${text}&client_id=${process.env.REACT_APP_GITHUB_CLIENT_ID}&client_secret=${process.env.REACT_APP_GITHUB_CLIENT_SECRET}`
     );
     
-    this.setState({ users: res.data.items, loading: false });
+    setUsers(res.data.items);
+    setLoading(false);
     
   };
 
-  clearUsers = () => this.setState({ users: [], loading: false })
+  const clearUsers = () => {
+    setUsers([]);
+    setLoading(false);
+  }
+
+  const showAlert = (msg, type) => { 
+    setAlert({msg, type});
+
+    setTimeout(() => setAlert(null), 3500)
+  }
   
-  render() {
-    const { users, loading } = this.state;
+
     return (
-  <>
-    <nav className="navbar bg-primary">
-     <Navbar title="Github Finder"/> 
-     </nav> 
+      <>
+        <nav className="navbar bg-primary">
+          <Navbar title="Github Finder"/> 
+        </nav> 
     
-    <div className='container'>
-      <Search searchUsers={this.searchUsers} clearUsers={this.clearUsers} showClear={users.length > 0 ? true : false} />
-      <Users loading={loading} users={users}/>
-    </div>
+      <div className='container'>
+        <Alert alert={alert} />
+        <Search searchUsers={searchUsers} clearUsers={clearUsers} showClear={users.length > 0 ? true : false} setAlert={showAlert}/>
+        <Users loading={loading} users={users} />
+      </div>
       
     
   
-  </>
+    </>
   );
-  }
+
 }
 
 export default App;
